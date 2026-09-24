@@ -1,15 +1,5 @@
 'use client';
 
-// ============================================================
-// components/ResultsBlock.tsx — Black & Red theme
-//
-// Layout (top → bottom):
-//  1. Source Credibility  — VerdictBadge + real/fake % score bar
-//  2. Fact Analysis       — analysis text + real/fake % score bar
-//  3. AI Analysis         — reasoning text + real/fake % score bar
-//  4. Sources Reviewed    — source cards (unchanged)
-// ============================================================
-
 import VerdictBadge from '@/components/VerdictBadge';
 import SourceCard from '@/components/SourceCard';
 import type { FactCheckResult } from '@/lib/mockData';
@@ -18,146 +8,192 @@ interface ResultsBlockProps {
   result: FactCheckResult;
 }
 
-// ── Reusable score bar ────────────────────────────────────────
-// Shows "X% Real  ████████░░  Y% Fake"
-
 function ScoreBar({
-  realPercent,
+  score,
   label,
 }: {
-  realPercent: number;
-  label?: string;
+  score: number;
+  label: string;
 }) {
-  const fakePercent = 100 - realPercent;
+  const safeScore = Math.max(
+    0,
+    Math.min(100, Number(score) || 0)
+  );
 
-  // Color the bar: green-ish when mostly real, red when mostly fake
   const barColor =
-    realPercent >= 70
+    safeScore >= 75
       ? 'bg-emerald-500'
-      : realPercent >= 45
-      ? 'bg-amber-400'
-      : 'bg-red-600';
+      : safeScore >= 50
+        ? 'bg-amber-400'
+        : 'bg-red-600';
 
   return (
-    <div className="mt-3">
-      {label && (
-        <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-400 dark:text-zinc-500 mb-1.5">
-          {label}
-        </p>
-      )}
-      {/* Bar */}
-      <div className="h-2 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+    <div className="mt-4">
+      <p className="mb-2 text-[10px] uppercase tracking-widest font-semibold text-zinc-400">
+        {label}
+      </p>
+
+      <div className="h-2 w-full rounded-full bg-zinc-800 overflow-hidden">
         <div
           className={`h-full rounded-full ${barColor} transition-all duration-700`}
-          style={{ width: `${realPercent}%` }}
+          style={{ width: `${safeScore}%` }}
         />
       </div>
-      {/* Labels */}
-      <div className="flex justify-between mt-1">
-        <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-          {realPercent}% Real
+
+      <div className="flex justify-between mt-1.5">
+        <span className="text-[11px] font-semibold text-emerald-400">
+          {safeScore}% Credibility
         </span>
-        <span className="text-[11px] font-semibold text-red-600 dark:text-red-400">
-          {fakePercent}% Fake
+
+        <span className="text-[11px] text-zinc-500">
+          {100 - safeScore}% Lower credibility
         </span>
       </div>
     </div>
   );
 }
 
-// ── Main component ────────────────────────────────────────────
-
-export default function ResultsBlock({ result }: ResultsBlockProps) {
-  const {
-    verdict,
-    confidence,
-    reasoning,
-    factAnalysis,
-    sources,
-    claim,
-    sourceCredibilityScore,
-    factAnalysisScore,
-    aiAnalysisScore,
-  } = result;
+export default function ResultsBlock({
+  result,
+}: ResultsBlockProps) {
+  const sourceReasons = result.sourceReasons ?? [];
+  const scoreBreakdown = result.scoreBreakdown ?? [];
 
   return (
-    <div className="space-y-4 animate-fadeIn">
+    <div className="space-y-4">
 
-      {/* ── 1. Source Credibility (was "Verdict") ── */}
-      <div className="p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+      {/* SOURCE CREDIBILITY */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
 
-        <p className="text-[11px] uppercase tracking-widest font-semibold text-zinc-400 dark:text-zinc-500 mb-3">
+        <p className="text-[11px] uppercase tracking-widest font-semibold text-zinc-500 mb-4">
           Source Credibility
         </p>
 
-        {/* Verdict badge */}
-        <VerdictBadge verdict={verdict} size="lg" />
+        <VerdictBadge
+          verdict={result.verdict}
+          size="lg"
+        />
 
-        {/* Claim echo */}
-        <div className="mt-3 text-xs text-zinc-500 dark:text-zinc-500 italic leading-relaxed border-l-2 border-zinc-200 dark:border-zinc-700 pl-3">
-          &ldquo;{claim.length > 140 ? claim.slice(0, 140) + '…' : claim}&rdquo;
-        </div>
+        <blockquote className="mt-4 border-l-2 border-zinc-700 pl-3 text-sm italic text-zinc-500 break-all">
+          "{result.claim}"
+        </blockquote>
 
-        {/* Score bar */}
-        <ScoreBar realPercent={sourceCredibilityScore} label="Credibility Score" />
+        <ScoreBar
+          score={result.sourceCredibilityScore}
+          label="Final Credibility Score"
+        />
+
+        {/* SCORE BREAKDOWN */}
+        {scoreBreakdown.length > 0 && (
+          <div className="mt-5 rounded-lg border border-zinc-800 bg-zinc-950 p-4">
+
+            <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-500 mb-3">
+              Score Breakdown
+            </p>
+
+            <div className="space-y-2">
+              {scoreBreakdown.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-2 text-xs text-zinc-400"
+                >
+                  <span className="text-emerald-500">
+                    ✓
+                  </span>
+
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-3 pt-3 border-t border-zinc-800 text-xs font-semibold text-zinc-300">
+              Final credibility score:{' '}
+              {result.sourceCredibilityScore}%
+            </div>
+
+          </div>
+        )}
+
+        {/* REASONS */}
+        {sourceReasons.length > 0 && (
+          <div className="mt-5">
+
+            <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-500 mb-3">
+              Reasons
+            </p>
+
+            <div className="space-y-2">
+              {sourceReasons.map((reason, index) => (
+                <div
+                  key={index}
+                  className="text-xs leading-relaxed text-zinc-400"
+                >
+                  • {reason}
+                </div>
+              ))}
+            </div>
+
+          </div>
+        )}
+
       </div>
 
-      {/* ── 2. Fact Analysis (was "Flagged Portion") ── */}
-      <div className="p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+      {/* FACT ANALYSIS */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
 
-        <p className="text-[11px] uppercase tracking-widest font-semibold text-zinc-400 dark:text-zinc-500 mb-3">
+        <p className="text-[11px] uppercase tracking-widest font-semibold text-zinc-500 mb-3">
           Fact Analysis
         </p>
 
-        <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
-          {factAnalysis}
+        <p className="text-sm leading-relaxed text-zinc-400">
+          {result.factAnalysis}
         </p>
 
-        {/* Score bar */}
-        <ScoreBar realPercent={factAnalysisScore} label="Fact Accuracy Score" />
       </div>
 
-      {/* ── 3. AI Analysis ── */}
-      <div className="p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+      {/* AI ANALYSIS */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
 
-        <p className="text-[11px] uppercase tracking-widest font-semibold text-zinc-400 dark:text-zinc-500 mb-3">
+        <p className="text-[11px] uppercase tracking-widest font-semibold text-zinc-500 mb-3">
           AI Analysis
         </p>
 
-        <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
-          {reasoning}
+        <p className="text-sm leading-relaxed text-zinc-400">
+          AI analysis is not available from the current source
+          credibility check.
         </p>
 
-        {/* Score bar */}
-        <ScoreBar realPercent={aiAnalysisScore} label="AI Confidence Score" />
       </div>
 
-      {/* ── 4. Overall Confidence (kept as-is) ── */}
-      <div className="px-5 py-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[11px] uppercase tracking-widest font-semibold text-zinc-400 dark:text-zinc-500">
-            Overall Confidence
-          </span>
-          <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200">{confidence}%</span>
-        </div>
-        <div className="h-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-          <div
-            className="h-full rounded-full bg-red-600 transition-all duration-700"
-            style={{ width: `${confidence}%` }}
-          />
-        </div>
+      {/* ANALYSIS SUMMARY */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+
+        <p className="text-[11px] uppercase tracking-widest font-semibold text-zinc-500 mb-3">
+          Analysis Summary
+        </p>
+
+        <p className="text-sm leading-relaxed text-zinc-400">
+          {result.reasoning}
+        </p>
+
       </div>
 
-      {/* ── 5. Sources Reviewed ── */}
+      {/* SOURCES */}
       <div>
-        <p className="text-[11px] uppercase tracking-widest font-semibold text-zinc-400 dark:text-zinc-500 mb-2 px-1">
-          Sources Reviewed ({sources.length})
+
+        <p className="text-[11px] uppercase tracking-widest font-semibold text-zinc-500 mb-3">
+          Sources Reviewed ({result.sources.length})
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {sources.map((source, i) => (
-            <SourceCard key={source.id} source={source} index={i} />
+
+        <div className="space-y-2">
+          {result.sources.map((source) => (
+            <SourceCard
+              key={source.id}
+              source={source}
+            />
           ))}
         </div>
+
       </div>
 
     </div>

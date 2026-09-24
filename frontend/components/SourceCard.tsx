@@ -1,51 +1,64 @@
 'use client';
 
-// ============================================================
-// components/SourceCard.tsx — Black & Red theme
-// ============================================================
-
-import { ExternalLink, Newspaper } from 'lucide-react';
+import { ExternalLink, FileText } from 'lucide-react';
 import type { Source } from '@/lib/mockData';
 
 interface SourceCardProps {
   source: Source;
-  index: number;
 }
 
-export default function SourceCard({ source, index }: SourceCardProps) {
-  const formatted = new Date(source.publishedAt).toLocaleDateString('en-IN', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+export default function SourceCard({
+  source,
+}: SourceCardProps) {
+  const credibilityClass =
+    source.credibility === 'High'
+      ? 'text-emerald-500'
+      : source.credibility === 'Medium'
+        ? 'text-amber-400'
+        : 'text-red-500';
 
   return (
-    <a
-      href={source.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group flex items-start gap-3 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-red-400 dark:hover:border-red-700 hover:shadow-sm transition-all"
-    >
-      <span className="shrink-0 w-5 h-5 mt-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-[10px] font-bold flex items-center justify-center">
-        {index + 1}
-      </span>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <Newspaper size={11} className="text-zinc-400 dark:text-zinc-500 shrink-0" />
-          <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 truncate">
-            {source.publisher}
-          </span>
-          <span className="text-[10px] text-zinc-400 dark:text-zinc-600">·</span>
-          <span className="text-[11px] text-zinc-400 dark:text-zinc-600 shrink-0">{formatted}</span>
+    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5">
+
+      <div className="flex items-center gap-3">
+
+        <div className="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+          <FileText
+            size={13}
+            className="text-zinc-500"
+          />
         </div>
-        <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors leading-snug line-clamp-2">
-          {source.title}
-        </p>
+
+        <div className="min-w-0 flex-1">
+
+          <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 truncate">
+            {source.title}
+          </p>
+
+          <p className="text-xs text-zinc-500 dark:text-zinc-500 truncate">
+            {source.url}
+          </p>
+
+          <p className={`text-[11px] font-semibold mt-1 ${credibilityClass}`}>
+            {source.credibility} credibility
+          </p>
+
+        </div>
+
+        {source.url && source.url !== '#' && (
+          <a
+            href={source.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-zinc-400 hover:text-zinc-200 transition-colors"
+            title="Open source"
+          >
+            <ExternalLink size={14} />
+          </a>
+        )}
+
       </div>
-      <ExternalLink
-        size={13}
-        className="shrink-0 mt-0.5 text-zinc-300 dark:text-zinc-600 group-hover:text-red-500 transition-colors"
-      />
-    </a>
+
+    </div>
   );
 }
