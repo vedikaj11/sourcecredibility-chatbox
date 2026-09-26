@@ -71,7 +71,7 @@ export default function ChatPanel({ factCheckId }: ChatPanelProps) {
       const errorMessage: ChatMessage = {
         role: 'assistant',
         content:
-          'Sorry, I could not connect to the TruthLens AI. Please make sure the backend is running.',
+          'Sorry, I could not connect to the NewsVeil AI. Please make sure the backend is running.',
       };
 
       setMessages((previous) => [...previous, errorMessage]);
@@ -93,7 +93,7 @@ export default function ChatPanel({ factCheckId }: ChatPanelProps) {
         <Bot size={15} className="text-red-600" />
 
         <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-          Ask TruthLens
+          Ask Newsveil
         </span>
 
         <span className="ml-auto text-[11px] text-zinc-400 dark:text-zinc-600">
